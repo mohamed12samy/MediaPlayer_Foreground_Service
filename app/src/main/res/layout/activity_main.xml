@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    >
+<LinearLayout
+    android:id="@+id/layput101"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+    <LinearLayout
+        android:id="@+id/layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background"
+        android:padding="8dp"
+        android:minHeight="55dp"
+        >
+        <TextView
+            android:id="@+id/song_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text=""
+            android:textColor="#000"
+            android:gravity="center"
+            android:textSize="20sp"
+            />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layout"
+        android:padding="5dp"
+/>
+</LinearLayout>
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <LinearLayout
+        android:id="@+id/design_bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:behavior_peekHeight="100dp"
+        app:behavior_hideable="true"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        android:orientation="vertical"
+        android:background="#fff"
+        >
+        <LinearLayout
+            android:visibility="visible"
+            android:id="@+id/collapsed_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+            <TextView
+                android:id="@+id/audio_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#000"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:layout_marginLeft="8dp"
+                />
+            <ImageButton
+                android:id="@+id/play_pause_button_collapsed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_play_arrow_black2_24dp"
+                android:layout_gravity="center"
+                android:background="@null"
+                android:padding="16dp"
+
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/expanded_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            >
+
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    >
+    <TextView
+        android:id="@+id/audio_name_bottom_expanded"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="2dp"
+        android:text=""
+        android:textColor="#000"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_weight="1"
+        android:layout_gravity="top|center"
+        android:gravity="center"
+
+        />
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="520dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_music_note_black_24dp" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_anchorGravity="right|center"
+        app:layout_anchor="@+id/image"
+        >
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_volume_up_black_24dp"
+            android:layout_gravity="center"
+            />
+        <SeekBar
+            android:id="@+id/seekBar_volume"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:padding="2dp"
+            android:rotation="270"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_volume_down_black_24dp"
+            android:layout_gravity="center"
+            />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#d6dbd8"
+    android:padding="0dp"
+    >
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginLeft="4dp"
+    android:id="@+id/dd"
+    >
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_weight="1"
+                />
+<TextView
+    android:id="@+id/Duration"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="00:00"
+    android:layout_weight="8"
+    android:gravity="right"
+    android:layout_marginRight="2dp"
+    />
+</LinearLayout>
+            <LinearLayout
+                android:id="@+id/ll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@+id/dd"
+                android:gravity="center"
+                >
+
+                <ImageButton
+                    android:id="@+id/previous"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_skip_previous_black2_24dp"
+                    android:layout_gravity="center"
+                    android:background="@null"
+                    android:padding="16dp"
+
+                    /><ImageButton
+                android:id="@+id/play_pause_button_expanded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_play_circle_filled_black_24dp"
+                android:layout_gravity="center"
+                android:background="@null"
+                android:padding="16dp"
+
+                /><ImageButton
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_skip_next_black2_24dp"
+                android:layout_gravity="center"
+                android:background="@null"
+                android:padding="16dp"
+                />
+
+            </LinearLayout>
+</RelativeLayout>
+        </LinearLayout>
+
+            </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    </RelativeLayout>
