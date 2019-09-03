@@ -22,6 +22,7 @@ public class AudioPlayService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
     public static final int NOTIFICATION_ID = 1;
     static RemoteViews notificationLayoutExpanded;
+    static RemoteViews notificationLayoutCollapsed;
     static NotificationManager manager;
     static Notification notification;
     static int position;
@@ -38,6 +39,7 @@ public class AudioPlayService extends Service {
 
 
         notificationLayoutExpanded = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        notificationLayoutCollapsed = new RemoteViews(getPackageName(), R.layout.notification_mini_layout);
 
         position = intent.getIntExtra("current", 0);
         hashMap = (HashMap<String, String>) intent.getSerializableExtra("path");
@@ -61,6 +63,7 @@ public class AudioPlayService extends Service {
         close.putExtra("action", "CLOSE");
         PendingIntent closePendingIntent = PendingIntent.getBroadcast(this, 0, close, 0);
         notificationLayoutExpanded.setOnClickPendingIntent(R.id.close_button, closePendingIntent);
+        notificationLayoutCollapsed.setOnClickPendingIntent(R.id.close_button, closePendingIntent);
 
         Intent pause = new Intent(this, switchButtonListener.class);
         pause.setAction("mediaplayeraction");
@@ -81,11 +84,13 @@ public class AudioPlayService extends Service {
         notificationLayoutExpanded.setOnClickPendingIntent(R.id.next_button, nextPendingIntent);
 
         notificationLayoutExpanded.setTextViewText(R.id.song_name, audios.get(position));
+        notificationLayoutCollapsed.setTextViewText(R.id.song_name, audios.get(position));
 
 
         notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_music_note_black_24dp)
                 .setContentIntent(pendingIntent)
+                .setCustomContentView(notificationLayoutCollapsed)
                 .setCustomBigContentView(notificationLayoutExpanded)
                 .build();
 

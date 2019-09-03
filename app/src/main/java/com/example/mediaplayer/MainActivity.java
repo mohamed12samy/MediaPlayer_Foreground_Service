@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
     private static SeekBar mSeekBar_volume;
     private BottomSheetBehavior mBottomSheetBehavior;
 
-    SharedPreferences sharedPreferences;
+    static SharedPreferences sharedPreferences;
     AudioManager audioManager ;
     SettingsContentObserver mSettingsContentObserver;
     @Override
@@ -96,14 +96,22 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
 
         sharedPreferences = getSharedPreferences("my_music", Context.MODE_PRIVATE);
         String song_name;
+        String duration;
         if(sharedPreferences.contains("song_name") && sharedPreferences.getString("song_name","") != null)
         {
             song_name = sharedPreferences.getString("song_name","");
+            duration = sharedPreferences.getString("duration","");
+            mSeekBar.setMax(sharedPreferences.getInt("max",0));
+            mSeekBar.setProgress(sharedPreferences.getInt("progress",0));
+
             currentSongPosition = audioList.indexOf(song_name);
-            updateTitlesUI(currentSongPosition,"");
+            updateTitlesUI(currentSongPosition,duration);
         }else{
             currentSongPosition = 0;
-            updateTitlesUI(currentSongPosition,"");
+            updateTitlesUI(currentSongPosition,"4:22");
+        }
+        if(isServiceRunning() && MediaPlayerOperations.getInstance().mp.isPlaying() ){
+            updateButtonUI(true);
         }
 
         recyclerView = findViewById(R.id.recycler);
@@ -244,21 +252,25 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
                         findViewById(R.id.collapsed_layout).setVisibility(View.VISIBLE);
                         findViewById(R.id.expanded_layout).setVisibility(View.GONE);
                         findViewById(R.id.layput101).setVisibility(View.VISIBLE);
+                        findViewById(R.id.relayout).setBackgroundColor(getResources().getColor(R.color.offwhite));
                         break;
                     case BottomSheetBehavior.STATE_EXPANDED:
                         findViewById(R.id.collapsed_layout).setVisibility(View.GONE);
                         findViewById(R.id.expanded_layout).setVisibility(View.VISIBLE);
                         findViewById(R.id.layput101).setVisibility(View.GONE);
+                        findViewById(R.id.relayout).setBackgroundColor(getResources().getColor(R.color.white));
                         break;
                     case BottomSheetBehavior.STATE_DRAGGING:
                         findViewById(R.id.collapsed_layout).setVisibility(View.GONE);
                         findViewById(R.id.expanded_layout).setVisibility(View.VISIBLE);
                         findViewById(R.id.layput101).setVisibility(View.GONE);
+                        findViewById(R.id.relayout).setBackgroundColor(getResources().getColor(R.color.white));
                         break;
                     case BottomSheetBehavior.STATE_HALF_EXPANDED:
                         findViewById(R.id.collapsed_layout).setVisibility(View.GONE);
                         findViewById(R.id.expanded_layout).setVisibility(View.VISIBLE);
                         findViewById(R.id.layput101).setVisibility(View.GONE);
+                        findViewById(R.id.relayout).setBackgroundColor(getResources().getColor(R.color.white));
                         break;
                     case BottomSheetBehavior.STATE_HIDDEN:
                         mBottomSheetBehavior.setState(STATE_COLLAPSED);
@@ -293,6 +305,9 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
         }
     }
     public static void setMax(int m){
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("max",m).commit();
+
         mSeekBar.setMax(m);
     }
     public static void setProgres(int progres){
