@@ -106,9 +106,9 @@ public class MediaPlayerOperations extends Application {
 
     public void playNext() {
         MainActivity.updateButtonUI(false);
-        notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
+       /* notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
         manager.notify(NOTIFICATION_ID, notification);
-
+*/
         if (audios != null && mp != null) {
 
             mp.stop();
@@ -154,9 +154,9 @@ public class MediaPlayerOperations extends Application {
 
     public void playPrevious() {
         MainActivity.updateButtonUI(false);
-        notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
+       /* notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
         manager.notify(NOTIFICATION_ID, notification);
-        if (audios != null && mp != null) {
+       */ if (audios != null && mp != null) {
 
             mp.stop();
             mp.release();
