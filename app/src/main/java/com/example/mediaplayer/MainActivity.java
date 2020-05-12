@@ -4,12 +4,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -17,10 +20,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -33,18 +38,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
+import java.io.FileDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.IntStream;
 
 import static com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED;
 
 public class MainActivity extends AppCompatActivity implements Iinterface {
 
-    static ArrayList<String> audioList = new ArrayList<>();
-    static HashMap<String, String> paths = new HashMap<>();
+    static ArrayList<Song> audioLisT = new ArrayList<>();
+
     static int currentSongPosition = 0;
     private RecyclerView recyclerView;
-    private RecyclerViewAdapter adapter = new RecyclerViewAdapter(audioList, this);
+    private RecyclerViewAdapter adapter = new RecyclerViewAdapter(audioLisT, this, this);
 
     static TextView title_expanded;
     static TextView title_top;
@@ -60,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
     private static SeekBar mSeekBar_volume;
     private BottomSheetBehavior mBottomSheetBehavior;
 
-    static SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences;
     AudioManager audioManager ;
     SettingsContentObserver mSettingsContentObserver;
     @Override
@@ -89,34 +96,19 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
         mSeekBar_volume.setMax(maxVolume);
         mSeekBar_volume.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
 
+        recyclerView = findViewById(R.id.recycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
         //GETTING THE PLAYLIST FROM DEVICE
-        audioList.clear();
+        audioLisT.clear();
         getPlayList();
         bottomSheet();
 
-        sharedPreferences = getSharedPreferences("my_music", Context.MODE_PRIVATE);
-        String song_name;
-        String duration;
-        if(sharedPreferences.contains("song_name") && sharedPreferences.getString("song_name","") != null)
-        {
-            song_name = sharedPreferences.getString("song_name","");
-            duration = sharedPreferences.getString("duration","");
-            mSeekBar.setMax(sharedPreferences.getInt("max",0));
-            mSeekBar.setProgress(sharedPreferences.getInt("progress",0));
-
-            currentSongPosition = audioList.indexOf(song_name);
-            updateTitlesUI(currentSongPosition,duration);
-        }else{
-            currentSongPosition = 0;
-            updateTitlesUI(currentSongPosition,"4:22");
-        }
         if(isServiceRunning() && MediaPlayerOperations.getInstance().mp.isPlaying() ){
             updateButtonUI(true);
         }
 
-        recyclerView = findViewById(R.id.recycler);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+
 
         play_pause_collapsed.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,11 +140,9 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
                 if(b)
                     MediaPlayerOperations.getInstance().seek(i);
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
 
@@ -176,6 +166,35 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
             }
         });
     }
+
+    private void fun_fun(){
+        sharedPreferences = getSharedPreferences("my_music", Context.MODE_PRIVATE);
+        final String song_name;
+        String duration;
+        if(sharedPreferences.contains("song_name") && sharedPreferences.getString("song_name","") != null)
+        {
+            song_name = sharedPreferences.getString("song_name","");
+            duration = sharedPreferences.getString("duration","");
+
+            mSeekBar.setMax(sharedPreferences.getInt("max",0));
+            mSeekBar.setProgress(sharedPreferences.getInt("progress",0));
+
+            currentSongPosition = index_of_song(song_name);
+            updateTitlesUI(currentSongPosition,duration);
+        }else{
+            currentSongPosition = 0;
+            updateTitlesUI(currentSongPosition,"00:00");
+        }
+
+    }
+
+    private int index_of_song(String title){
+        for(int i=0; i<audioLisT.size(); i++){
+            if(audioLisT.get(i).getTitle().equals(title))
+                return i;
+        }
+        return -1;
+    }
     private boolean isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
@@ -189,8 +208,9 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
     public void startService() {
         Intent serviceIntent = new Intent(this, AudioPlayService.class);
         serviceIntent.putExtra("current", currentSongPosition);
-        serviceIntent.putExtra("audios", audioList);
-        serviceIntent.putExtra("path", paths);
+        //serviceIntent.putExtra("audios", audioList);
+        serviceIntent.putParcelableArrayListExtra("audioss",audioLisT);
+        //serviceIntent.putExtra("path", paths);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
 
@@ -199,9 +219,10 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
         currentSongPosition = position;
         startService();
 
-        title_top.setText(audioList.get(position));
-        title_collapsed.setText(audioList.get(position));
-        title_expanded.setText(audioList.get(position));
+        String title =  audioLisT.get(position).getTitle();/*audioList.get(position);*/
+        title_top.setText(title);
+        title_collapsed.setText(title);
+        title_expanded.setText(title);
 
     }
 
@@ -216,27 +237,32 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
         }
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri videoUri = android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
         //iterate over results if valid
         if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
-            int titleColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.TITLE);
+            int titleColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE);
             int data = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
-            int durationColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.DURATION);
+            int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+            int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int artist_id = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID);
+            int album_id_column = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
             do {
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisdata = musicCursor.getString(data);
                 String thisduration = musicCursor.getString(durationColumn);
-                Log.d("Duration",thisduration);
+                String artist = musicCursor.getString(artistColumn);
+                String artistID = musicCursor.getString(artist_id);
+                String albumID = musicCursor.getString(album_id_column);
 
-
-                paths.put(thisTitle, thisdata);
-                audioList.add(thisTitle);
+                audioLisT.add(new Song(thisTitle,thisdata, thisduration,Integer.parseInt(albumID), artist ));
             }
             while (musicCursor.moveToNext());
 
+            recyclerView.setAdapter(adapter);
+            fun_fun();
         }
 
     }
@@ -286,15 +312,17 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
         });
     }
 
-    public static void updateTitlesUI(int position,String Duration) {
-        String Title = audioList.get(position);
+    @Override
+    public void updateTitlesUI(int position,String Duration) {
+        String Title = audioLisT.get(position).getTitle();/*audioList.get(position)*/
         title_top.setText(Title);
         title_collapsed.setText(Title);
         duration.setText(Duration);
         title_expanded.setText(Title);
     }
 
-    public static void updateButtonUI(boolean playing) {
+    @Override
+    public void updateButtonUI(boolean playing) {
         if(playing){
             play_pause.setImageResource(R.drawable.ic_pause_circle_filled_black_24dp);
             play_pause_collapsed.setImageResource(R.drawable.ic_pause_black2_24dp);
@@ -304,16 +332,27 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
             play_pause_collapsed.setImageResource(R.drawable.ic_play_arrow_black2_24dp);
         }
     }
-    public static void setMax(int m){
+    @Override
+    public void setMax(int m){
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("max",m).commit();
 
         mSeekBar.setMax(m);
     }
-    public static void setProgres(int progres){
+    @Override
+    public void setProgres(int progres){
         mSeekBar.setProgress(progres);
     }
 
+    @Override
+    public void updateDuration(int progress, int position){
+        String d = audioLisT.get(position).getDuration();
+        progress = Integer.parseInt(d) - progress;
+        int minutes = ((progress % (1000 * 60 * 60)) / (1000 * 60));
+        int seconds = (((progress % (1000 * 60 * 60)) % (1000 * 60)) / 1000);
+
+        duration.setText(minutes+":"+seconds);
+    }
 
     @Override
     protected void onStart() {
@@ -346,6 +385,23 @@ public class MainActivity extends AppCompatActivity implements Iinterface {
             super.onChange(selfChange);
             Log.v("ASDR", "Settings change detected");
             mSeekBar_volume.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case 101:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                            getPlayList();
+                        }
+                    }
+                }
+                break;
         }
     }
 }

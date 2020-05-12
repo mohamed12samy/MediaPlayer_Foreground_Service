@@ -7,8 +7,7 @@ import android.media.MediaPlayer;
 import android.util.Log;
 
 import static com.example.mediaplayer.AudioPlayService.NOTIFICATION_ID;
-import static com.example.mediaplayer.AudioPlayService.audios;
-import static com.example.mediaplayer.AudioPlayService.hashMap;
+
 import static com.example.mediaplayer.AudioPlayService.manager;
 import static com.example.mediaplayer.AudioPlayService.notification;
 import static com.example.mediaplayer.AudioPlayService.notificationLayoutExpanded;

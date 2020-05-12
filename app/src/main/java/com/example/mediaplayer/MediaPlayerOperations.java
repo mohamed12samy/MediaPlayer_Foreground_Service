@@ -14,22 +14,22 @@ import androidx.core.content.ContextCompat;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.example.mediaplayer.AudioPlayService.AudiosS;
 import static com.example.mediaplayer.AudioPlayService.NOTIFICATION_ID;
-import static com.example.mediaplayer.AudioPlayService.audios;
-import static com.example.mediaplayer.AudioPlayService.hashMap;
 import static com.example.mediaplayer.AudioPlayService.manager;
 import static com.example.mediaplayer.AudioPlayService.notification;
 import static com.example.mediaplayer.AudioPlayService.notificationLayoutExpanded;
 import static com.example.mediaplayer.AudioPlayService.position;
-import static com.example.mediaplayer.MainActivity.audioList;
+import static com.example.mediaplayer.MainActivity.audioLisT;
 import static com.example.mediaplayer.MainActivity.currentSongPosition;
-import static com.example.mediaplayer.MainActivity.paths;
 
 public class MediaPlayerOperations extends Application {
 
     private static MediaPlayerOperations mMyApplication;
     public static MediaPlayer mp;
     private SharedPreferences sharedPreferences;
+
+    private Iinterface main;
 
     public static synchronized MediaPlayerOperations getInstance() {
         return mMyApplication;
@@ -39,6 +39,7 @@ public class MediaPlayerOperations extends Application {
     public void onCreate() {
         super.onCreate();
         mMyApplication = this;
+        this.main = new MainActivity();
         sharedPreferences = getSharedPreferences("my_music", Context.MODE_PRIVATE);
 
     }
@@ -46,7 +47,7 @@ public class MediaPlayerOperations extends Application {
     public void stop() {
         if (mp != null) {
             mp.pause();
-            MainActivity.updateButtonUI(false);
+            main.updateButtonUI(false);
         }
     }
 
@@ -57,145 +58,148 @@ public class MediaPlayerOperations extends Application {
                 notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
                 manager.notify(NOTIFICATION_ID, notification);
 
-                MainActivity.updateButtonUI(false);
+                main.updateButtonUI(false);
             } else if (!mp.isPlaying()) {
                 mp.start();
                 notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_pause_white_24dp);
                 manager.notify(NOTIFICATION_ID, notification);
 
-                MainActivity.updateButtonUI(true);
+                main.updateButtonUI(true);
 
                 if (!isServiceRunning()) {
-                    Log.d("rtrtrt", "yyyy");
                     Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
                     serviceIntent.putExtra("current", currentSongPosition);
-                    serviceIntent.putExtra("audios", audioList);
-                    serviceIntent.putExtra("path", paths);
+                    serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
+                    //serviceIntent.putExtra("path", paths);
                     serviceIntent.putExtra("resume", true);
                     ContextCompat.startForegroundService(mMyApplication, serviceIntent);
                 }
             }
         }
         if (!isServiceRunning() && mp == null) {
-            Log.d("rtrtrt", "yyyy");
             Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
             serviceIntent.putExtra("current", currentSongPosition);
-            serviceIntent.putExtra("audios", audioList);
-            serviceIntent.putExtra("path", paths);
+            serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
+            //serviceIntent.putExtra("path", paths);
             serviceIntent.putExtra("start", true);
             ContextCompat.startForegroundService(mMyApplication, serviceIntent);
         }
     }
-
 
     public void start(String path) {
         if (mp != null) {
             mp.stop();
             mp.release();
         }
-        mp = MediaPlayer.create(mMyApplication, Uri.parse(hashMap.get(audios.get(position))));
+        mp = MediaPlayer.create(mMyApplication, Uri.parse(/*hashMap.get(audios.get(position)))*/AudiosS.get(position).getPath()));
         mp.start();
-        String d = Duration();
-        MainActivity.updateTitlesUI(position, d);
-        MainActivity.updateButtonUI(true);
+        //String d = Duration();
+        setProgress();
+        onCompletion();
+        main.updateTitlesUI(position, AudiosS.get(position).getDuration());
+        main.updateButtonUI(true);
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("song_name", audios.get(position)).commit();
-        editor.putString("duration", d).commit();
+        editor.putString("song_name",/*audios.get(position)*/ AudiosS.get(position).getTitle()).commit();
+        editor.putString("duration",Duration()).commit();
+
+
+
     }
 
     public void playNext() {
-        MainActivity.updateButtonUI(false);
+        main.updateButtonUI(false);
        /* notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
         manager.notify(NOTIFICATION_ID, notification);
 */
-        if (audios != null && mp != null) {
+        if (/*audios*/ AudiosS != null && mp != null) {
 
             mp.stop();
             mp.release();
 
-            if (position == audios.size() - 1)
+            if (position == /*audios*/AudiosS.size() - 1)
                 position = -1;
-            mp = MediaPlayer.create(mMyApplication, Uri.parse(hashMap.get(audios.get(++position))));
+            mp = MediaPlayer.create(mMyApplication, Uri.parse(AudiosS.get(++position).getPath()/*hashMap.get(audios.get(++position)))*/));
             mp.start();
-            String d = Duration();
+            //String d = Duration();
+
+            setProgress();
+            onCompletion();
+
             notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_pause_white_24dp);
-            notificationLayoutExpanded.setTextViewText(R.id.song_name, audios.get(position));
+            notificationLayoutExpanded.setTextViewText(R.id.song_name, AudiosS.get(position).getTitle()/*audios.get(position)*/);
             manager.notify(NOTIFICATION_ID, notification);
 
-            MainActivity.updateTitlesUI(position, d);
-            MainActivity.updateButtonUI(true);
+            main.updateTitlesUI(position, AudiosS.get(position).getDuration());
+            main.updateButtonUI(true);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("song_name", audios.get(position)).commit();
-            editor.putString("duration", d).commit();
+            editor.putString("song_name", /*audios*/AudiosS.get(position).getTitle()).commit();
+            editor.putString("duration",Duration()).commit();
 
             if (!isServiceRunning()) {
-                Log.d("rtrtrt", "yyyy");
                 Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
                 serviceIntent.putExtra("current", currentSongPosition);
-                serviceIntent.putExtra("audios", audioList);
-                serviceIntent.putExtra("path", paths);
+                serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
                 serviceIntent.putExtra("resume", true);
                 ContextCompat.startForegroundService(mMyApplication, serviceIntent);
             }
         }
 
-        if (!isServiceRunning() && mp == null && currentSongPosition < audioList.size() - 1) {
-            Log.d("rtrtrt", "yyyy");
+
+
+        if (!isServiceRunning() && mp == null && currentSongPosition < /*audioList*/audioLisT.size() - 1) {
             Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
             serviceIntent.putExtra("current", ++currentSongPosition);
-            serviceIntent.putExtra("audios", audioList);
-            serviceIntent.putExtra("path", paths);
+            serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
             serviceIntent.putExtra("start", true);
             ContextCompat.startForegroundService(mMyApplication, serviceIntent);
         } else return;
     }
 
     public void playPrevious() {
-        MainActivity.updateButtonUI(false);
-       /* notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
-        manager.notify(NOTIFICATION_ID, notification);
-       */ if (audios != null && mp != null) {
+        main.updateButtonUI(false);
+        if (/*audios*/AudiosS != null && mp != null) {
 
             mp.stop();
             mp.release();
 
             if (position == 0)
-                position = audioList.size();
-            mp = MediaPlayer.create(mMyApplication, Uri.parse(hashMap.get(audios.get(--position))));
+                position = /*audioList*/audioLisT.size();
+            mp = MediaPlayer.create(mMyApplication, Uri.parse(AudiosS.get(--position).getPath()/*hashMap.get(audios.get(--position)))*/));
             mp.start();
-            String d = Duration();
+            //String d = Duration();
+
+            setProgress();
+            onCompletion();
+
             notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_pause_white_24dp);
-            notificationLayoutExpanded.setTextViewText(R.id.song_name, audios.get(position));
+            notificationLayoutExpanded.setTextViewText(R.id.song_name, /*audios*/AudiosS.get(position).getTitle());
             manager.notify(NOTIFICATION_ID, notification);
 
-            MainActivity.updateTitlesUI(position, d);
-            MainActivity.updateButtonUI(true);
+            main.updateTitlesUI(position, AudiosS.get(position).getDuration());
+            main.updateButtonUI(true);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("song_name", audios.get(position)).commit();
-            editor.putString("duration",d).commit();
+            editor.putString("song_name", /*audios*/AudiosS.get(position).getTitle()).commit();
+            editor.putString("duration",Duration()).commit();
+
 
             if (!isServiceRunning()) {
-                Log.d("rtrtrt", "yyyy");
                 Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
                 serviceIntent.putExtra("current", currentSongPosition);
-                serviceIntent.putExtra("audios", audioList);
-                serviceIntent.putExtra("path", paths);
+                serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
                 serviceIntent.putExtra("resume", true);
                 ContextCompat.startForegroundService(mMyApplication, serviceIntent);
             }
         } else {
-            MainActivity.updateButtonUI(true);
+            main.updateButtonUI(true);
         }
 
         if (!isServiceRunning() && mp == null && currentSongPosition > 0) {
-            Log.d("rtrtrt", "yyyy");
             Intent serviceIntent = new Intent(mMyApplication, AudioPlayService.class);
             serviceIntent.putExtra("current", --currentSongPosition);
-            serviceIntent.putExtra("audios", audioList);
-            serviceIntent.putExtra("path", paths);
+            serviceIntent.putParcelableArrayListExtra("audioss", /*audioList*/audioLisT);
             serviceIntent.putExtra("start", true);
             ContextCompat.startForegroundService(mMyApplication, serviceIntent);
         }
@@ -208,46 +212,46 @@ public class MediaPlayerOperations extends Application {
     }
 
     private String Duration() {
-        MainActivity.setMax((mp.getDuration() / 1000));
         int minutes = ((mp.getDuration() % (1000 * 60 * 60)) / (1000 * 60));
         int seconds = (((mp.getDuration() % (1000 * 60 * 60)) % (1000 * 60)) / 1000);
         String d = minutes + ":" + seconds;
-
-        setProgress();
-        onCompletion();
-        Log.d("TIME", d);
         return d;
     }
 
-    public void onCompletion() {
+    private void onCompletion() {
         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 notificationLayoutExpanded.setImageViewResource(R.id.play_pause_button, R.drawable.ic_play_arrow_white_24dp);
                 manager.notify(NOTIFICATION_ID, notification);
-                MainActivity.updateButtonUI(false);
+                main.updateButtonUI(false);
                 playNext();
             }
         });
     }
 
-    public void setProgress() {
-
+    private void setProgress() {
+        main.setMax((mp.getDuration() / 1000));
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (mp != null)
                     try {
-                        MainActivity.setProgres(mp.getCurrentPosition() / 1000);
+                        int x = mp.getCurrentPosition();
+
+                        main.setProgres(x / 1000);
+                        main.updateDuration(x,position);
+
                         SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putInt("progress",mp.getCurrentPosition() / 1000).commit();
+                        editor.putInt("progress",x / 1000).commit();
 
                     } catch (Exception e) {
                     }
             }
-        }, 0, 500);
+        }, 0, 1000);
 
     }
+
     private boolean isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {

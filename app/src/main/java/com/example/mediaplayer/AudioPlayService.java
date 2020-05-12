@@ -14,7 +14,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 
 public class AudioPlayService extends Service {
@@ -26,8 +25,8 @@ public class AudioPlayService extends Service {
     static NotificationManager manager;
     static Notification notification;
     static int position;
-    static ArrayList<String> audios;
-    static HashMap<String, String> hashMap;
+
+    static ArrayList<Song> AudiosS;
 
     @Override
     public void onCreate() {
@@ -42,9 +41,7 @@ public class AudioPlayService extends Service {
         notificationLayoutCollapsed = new RemoteViews(getPackageName(), R.layout.notification_mini_layout);
 
         position = intent.getIntExtra("current", 0);
-        hashMap = (HashMap<String, String>) intent.getSerializableExtra("path");
-        audios = intent.getStringArrayListExtra("audios");
-
+        AudiosS = intent.getParcelableArrayListExtra("audioss");
 
         if (!intent.getBooleanExtra("resume", false))
             MediaPlayerOperations.getInstance().start("");
@@ -83,9 +80,8 @@ public class AudioPlayService extends Service {
         PendingIntent nextPendingIntent = PendingIntent.getBroadcast(this, 3, next, 0);
         notificationLayoutExpanded.setOnClickPendingIntent(R.id.next_button, nextPendingIntent);
 
-        notificationLayoutExpanded.setTextViewText(R.id.song_name, audios.get(position));
-        notificationLayoutCollapsed.setTextViewText(R.id.song_name, audios.get(position));
-
+        notificationLayoutExpanded.setTextViewText(R.id.song_name, AudiosS.get(position).getTitle());
+        notificationLayoutCollapsed.setTextViewText(R.id.song_name, AudiosS.get(position).getTitle());
 
         notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_music_note_black_24dp)
